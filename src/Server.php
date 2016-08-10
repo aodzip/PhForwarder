@@ -1,6 +1,8 @@
 <?php
 use utils\Config;
 use utils\MainLogger;
+use client\TCPClient;
+
 class Server{
 
     public static $addr;
@@ -9,7 +11,8 @@ class Server{
     public static $targetport;
     public static $password;
 
-    private $clients = [];
+    private $tcp = [];
+    private $udp = [];
 
     public function __construct(){
         new MainLogger($this);
@@ -18,22 +21,39 @@ class Server{
             Config::createConf('server.properties');
             MainLogger::getInstance()->info('创建默认配置文件');
         }
-        Config::loadConf('server.properties');
-        $server = socket_create_listen(static::$port);
-        socket_set_nonblock($server);
-        MainLogger::getInstance()->success("PhProxy 监听于 " . static::$addr . ":".static::$port." 映射到 ".static::$target.":".static::$targetport);
+        $conf = Config::loadConf('server.properties');
+        foreach($conf as $server){
+            $this->createListener($server);
+        }
         while(true){
-            if(($client = socket_accept($server))){
-                $this->clients[] = new Client($client, static::$password);
-            }
-            foreach($this->clients as $key => $client){
-                if($client->isClosed()){
-                    socket_close($client->getsocket());
-                    unset($this->clients[$key]);
+            foreach($this->tcp as $key => $connection){
+                if(($client = socket_accept($connection[0]))){
+                    $this->tcp[$key][3][] = new TCPClient($client, $connection[1], $connection[2]);
+                }
+                foreach($connection[3] as $ckey => $client){
+                    if($client->isClosed()){
+                        socket_close($client->getsocket());
+                        unset($this->tcp[$key][3][$ckey]);
+                    }
                 }
             }
             usleep(1);
         }
+    }
+
+    private function createListener($server){
+        if($server[0] == 'TCP'){
+            $socket = socket_create(AF_INET, SOCK_STREAM, SOL_TCP);
+            if(socket_bind($socket, $server[1], $server[2])){
+                socket_listen($socket);
+                socket_set_nonblock($socket);
+                MainLogger::getInstance()->success("PhForwarder 监听于 " . $server[1] . ":" . $server[2] . " 映射到 " . $server[3] . ":" . $server[4]);
+                $this->tcp[] = [$socket, $server[3], $server[4], []];
+            }else{
+                MainLogger::getInstance()->warning("PhForwarder 监听于 " . $server[1] . ":" . $server[2] . "失败");
+            }
+        }
+
     }
 
     public function getLogFile(){
