@@ -20,7 +20,8 @@ class Config{
     }
 
     public static function createConf($file){
-        $conf .= 'TCP 0.0.0.0 12001 127.0.0.1 22' . PHP_EOL;
+        $conf .= 'TCP 0.0.0.0 25000 127.0.0.1 25565' . PHP_EOL;
+        $conf .= 'UDP 0.0.0.0 19000 127.0.0.1 19132' . PHP_EOL;
         file_put_contents($file, $conf);
     }
 

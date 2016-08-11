@@ -2,7 +2,7 @@
 use utils\Config;
 use utils\MainLogger;
 use client\TCPClient;
-
+use client\UDPClient;
 class Server{
 
     public static $addr;
@@ -16,8 +16,9 @@ class Server{
 
     public function __construct(){
         new MainLogger($this);
+        MainLogger::getInstance()->info('PhForwarder 0.1 启动中');
         if(!file_exists('server.properties')){
-            MainLogger::getInstance()->warning('无服务端配置文件');
+            MainLogger::getInstance()->warning('未找到服务端配置文件');
             Config::createConf('server.properties');
             MainLogger::getInstance()->info('创建默认配置文件');
         }
@@ -44,16 +45,25 @@ class Server{
     private function createListener($server){
         if($server[0] == 'TCP'){
             $socket = socket_create(AF_INET, SOCK_STREAM, SOL_TCP);
-            if(socket_bind($socket, $server[1], $server[2])){
+            if(@socket_bind($socket, $server[1], $server[2])){
                 socket_listen($socket);
                 socket_set_nonblock($socket);
-                MainLogger::getInstance()->success("PhForwarder 监听于 " . $server[1] . ":" . $server[2] . " 映射到 " . $server[3] . ":" . $server[4]);
+                MainLogger::getInstance()->success("TCP 监听于 " . $server[1] . ":" . $server[2] . " 映射到 " . $server[3] . ":" . $server[4]);
                 $this->tcp[] = [$socket, $server[3], $server[4], []];
             }else{
-                MainLogger::getInstance()->warning("PhForwarder 监听于 " . $server[1] . ":" . $server[2] . "失败");
+                MainLogger::getInstance()->warning("TCP 监听于 " . $server[1] . ":" . $server[2] . " 失败");
             }
         }
-
+        if($server[0] == 'UDP'){
+            $socket = socket_create(AF_INET, SOCK_DGRAM, SOL_UDP);
+            if(socket_bind($socket, $server[1], $server[2])){
+                socket_set_option($socket, SOL_SOCKET, SO_REUSEADDR, 0);
+                MainLogger::getInstance()->success("UDP 监听于 " . $server[1] . ":" . $server[2] . " 映射到 " . $server[3] . ":" . $server[4]);
+                $this->udp[] = new UDPClient($socket, $server[3], $server[4]);
+            }else{
+                MainLogger::getInstance()->warning("UDP 监听于 " . $server[1] . ":" . $server[2] . " 失败");
+            }
+        }
     }
 
     public function getLogFile(){
