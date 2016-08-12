@@ -1,8 +1,8 @@
 <?php
 $DIRN = 'src';
-$pharPath = "PhProxy.phar";
+$pharPath = "PhForwarder.phar";
 $phar = new Phar($pharPath);
-$phar->setStub('<?php require_once("phar://". __FILE__ ."/PhProxy.php");  __HALT_COMPILER();');
+$phar->setStub('<?php require_once("phar://". __FILE__ ."/PhForwarder.php");  __HALT_COMPILER();');
 $phar->setSignatureAlgorithm(Phar::SHA1);
 $phar->startBuffering();
 $filePath=__DIR__ ."/$DIRN";

@@ -10,7 +10,7 @@ class UDPSession extends \Thread{
     public $lastrecv;
     public $isclosed;
 
-    public function __construct($client, $from = null, $fromport = null, $target = null, $targetport = null, $timeout){
+    public function __construct($client, $from = null, $fromport = null, $target = null, $targetport = null, $timeout = 30){
         if($client == null) return;
         $this->lastrecv = time();
         $this->client = $client;

@@ -45,6 +45,7 @@ class Server{
     private function createListener($server){
         if($server[0] == 'TCP'){
             $socket = socket_create(AF_INET, SOCK_STREAM, SOL_TCP);
+            socket_set_option($socket, SOL_SOCKET, SO_REUSEADDR, 1);
             if(@socket_bind($socket, $server[1], $server[2])){
                 socket_listen($socket);
                 socket_set_nonblock($socket);
