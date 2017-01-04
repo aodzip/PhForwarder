@@ -1,8 +1,7 @@
 <?php
 use utils\Config;
-use utils\MainLogger;
 use client\TCPClient;
-use client\UDPClient;
+use client\UDPThread;
 class Server{
 
     public static $addr;
@@ -15,12 +14,11 @@ class Server{
     private $udp = [];
 
     public function __construct(){
-        new MainLogger($this);
-        MainLogger::getInstance()->info('PhForwarder 0.1 启动中');
+        echo('PhForwarder 0.2 Starting...' . PHP_EOL);
         if(!file_exists('server.properties')){
-            MainLogger::getInstance()->warning('未找到服务端配置文件');
+            echo('Can\'t find config file' . PHP_EOL);
             Config::createConf('server.properties');
-            MainLogger::getInstance()->info('创建默认配置文件');
+            echo('Creating default config file' . PHP_EOL);
         }
         $conf = Config::loadConf('server.properties');
         foreach($conf as $server){
@@ -38,7 +36,7 @@ class Server{
                     }
                 }
             }
-            usleep(1);
+            usleep(50000);
         }
     }
 
@@ -49,26 +47,15 @@ class Server{
             if(@socket_bind($socket, $server[1], $server[2])){
                 socket_listen($socket);
                 socket_set_nonblock($socket);
-                MainLogger::getInstance()->success("TCP 监听于 " . $server[1] . ":" . $server[2] . " 映射到 " . $server[3] . ":" . $server[4]);
+                echo("TCP 监听于 " . $server[1] . ":" . $server[2] . " 映射到 " . $server[3] . ":" . $server[4] . PHP_EOL);
                 $this->tcp[] = [$socket, $server[3], $server[4], []];
             }else{
-                MainLogger::getInstance()->warning("TCP 监听于 " . $server[1] . ":" . $server[2] . " 失败");
+                echo("TCP 监听于 " . $server[1] . ":" . $server[2] . " 失败" . PHP_EOL);
             }
         }
         if($server[0] == 'UDP'){
-            $socket = socket_create(AF_INET, SOCK_DGRAM, SOL_UDP);
-            if(socket_bind($socket, $server[1], $server[2])){
-                socket_set_option($socket, SOL_SOCKET, SO_REUSEADDR, 0);
-                MainLogger::getInstance()->success("UDP 监听于 " . $server[1] . ":" . $server[2] . " 映射到 " . $server[3] . ":" . $server[4]);
-                $this->udp[] = new UDPClient($socket, $server[3], $server[4]);
-            }else{
-                MainLogger::getInstance()->warning("UDP 监听于 " . $server[1] . ":" . $server[2] . " 失败");
-            }
+            $this->udp[] = new UDPThread($server[1], $server[2], $server[3], $server[4]);
         }
-    }
-
-    public function getLogFile(){
-        return $this->getBaseDir().DIRECTORY_SEPARATOR.'server.log';
     }
 
     public function getBaseDir(){
