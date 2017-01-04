@@ -2,7 +2,9 @@
 use utils\Config;
 use client\TCPClient;
 use client\UDPThread;
-class Server{
+
+class Server
+{
 
     public static $addr;
     public static $port;
@@ -13,53 +15,37 @@ class Server{
     private $tcp = [];
     private $udp = [];
 
-    public function __construct(){
-        echo('PhForwarder 0.2 Starting...' . PHP_EOL);
-        if(!file_exists('server.properties')){
-            echo('Can\'t find config file' . PHP_EOL);
+    public function __construct()
+    {
+        echo 'PhForwarder 0.2 Starting...' . PHP_EOL;
+        if (!file_exists('server.properties')) {
+            echo 'No config file' . PHP_EOL;
             Config::createConf('server.properties');
-            echo('Creating default config file' . PHP_EOL);
+            echo 'Creating default config file' . PHP_EOL;
         }
         $conf = Config::loadConf('server.properties');
-        foreach($conf as $server){
+        foreach ($conf as $server) {
             $this->createListener($server);
         }
-        while(true){
-            foreach($this->tcp as $key => $connection){
-                if(($client = socket_accept($connection[0]))){
-                    $this->tcp[$key][3][] = new TCPClient($client, $connection[1], $connection[2]);
-                }
-                foreach($connection[3] as $ckey => $client){
-                    if($client->isClosed()){
-                        socket_close($client->getsocket());
-                        unset($this->tcp[$key][3][$ckey]);
-                    }
-                }
+        while (true) {
+            if(fgets(STDIN) == 'stop'){
+                continue;
             }
-            usleep(50000);
         }
     }
 
-    private function createListener($server){
-        if($server[0] == 'TCP'){
-            $socket = socket_create(AF_INET, SOCK_STREAM, SOL_TCP);
-            socket_set_option($socket, SOL_SOCKET, SO_REUSEADDR, 1);
-            if(@socket_bind($socket, $server[1], $server[2])){
-                socket_listen($socket);
-                socket_set_nonblock($socket);
-                echo("TCP 监听于 " . $server[1] . ":" . $server[2] . " 映射到 " . $server[3] . ":" . $server[4] . PHP_EOL);
-                $this->tcp[] = [$socket, $server[3], $server[4], []];
-            }else{
-                echo("TCP 监听于 " . $server[1] . ":" . $server[2] . " 失败" . PHP_EOL);
-            }
+    private function createListener($server)
+    {
+        if ($server[0] == 'TCP') {
+            //TODO new TCP Handler
         }
-        if($server[0] == 'UDP'){
+        if ($server[0] == 'UDP') {
             $this->udp[] = new UDPThread($server[1], $server[2], $server[3], $server[4]);
         }
     }
 
-    public function getBaseDir(){
+    public function getBaseDir()
+    {
         return '.';
     }
 }
-

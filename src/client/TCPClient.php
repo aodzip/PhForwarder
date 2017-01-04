@@ -23,10 +23,10 @@ class TCPClient extends \Thread
     {
         $client = $this->client;
         socket_getpeername($client, $caddress, $cport);
-        echo("TCP $caddress:$cport 发起链接" . PHP_EOL);
+        echo "TCP $caddress:$cport 发起链接" . PHP_EOL;
         $server = socket_create(AF_INET, SOCK_STREAM, SOL_TCP);
         if (!socket_connect($server, $this->target, $this->targetport)) {
-            echo("TCP 后端服务器{$this->target}:{$this->targetport}无法连接" . PHP_EOL);
+            echo "TCP 后端服务器{$this->target}:{$this->targetport}无法连接" . PHP_EOL;
             $this->isclosed = true;
         }
         while (!$this->isclosed) {
@@ -48,7 +48,7 @@ class TCPClient extends \Thread
         }
         @socket_close($server);
         $this->isclosed = true;
-        echo("TCP $caddress:$cport 断开链接" . PHP_EOL);
+        echo "TCP $caddress:$cport 断开链接" . PHP_EOL ;
     }
 
     public function isClosed()

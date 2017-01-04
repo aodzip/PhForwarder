@@ -30,7 +30,7 @@ class UDPThread extends \Thread
         if (socket_bind($socket, $this->src_addr, $this->src_port)) {
             echo "UDP listen at: $this->src_addr:$this->src_port forward to $this->dest_addr:$this->dest_port" . PHP_EOL;
         } else {
-            echo"UDP listen at: $this->src_addr:$this->src_port FAILED" . PHP_EOL;
+            echo "UDP listen at: $this->src_addr:$this->src_port FAILED" . PHP_EOL;
         }
         $count = 0;
         $lastcount = 0;

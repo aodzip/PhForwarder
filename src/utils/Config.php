@@ -1,8 +1,6 @@
 <?php
 namespace utils;
 
-use \Server;
-
 class Config
 {
 
