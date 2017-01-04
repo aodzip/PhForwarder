@@ -1,8 +1,6 @@
 <?php
 namespace client;
 
-use utils\MainLogger;
-
 class TCPClient extends \Thread
 {
 
@@ -15,7 +13,6 @@ class TCPClient extends \Thread
         $this->client = $client;
         $this->target = $target;
         $this->targetport = $targetport;
-        $this->logger = MainLogger::getInstance();
         $this->start();
     }
 

@@ -27,6 +27,7 @@ class UDPThread extends \Thread
     {
         $socket = socket_create(AF_INET, SOCK_DGRAM, SOL_UDP);
         socket_set_option($socket, SOL_SOCKET, SO_REUSEADDR, 1);
+        socket_set_nonblock($socket);
         if (socket_bind($socket, $this->src_addr, $this->src_port)) {
             echo "UDP listen at: $this->src_addr:$this->src_port forward to $this->dest_addr:$this->dest_port" . PHP_EOL;
         } else {
@@ -36,7 +37,8 @@ class UDPThread extends \Thread
         $lastcount = 0;
         $stat = 0;
         while ($this->isrunning) {
-            $status = socket_recvfrom($socket, $buffer, 1024, 64, $client_ip, $client_port);
+            echo '.';
+            $status = socket_recvfrom($socket, $buffer, 1024, 0, $client_ip, $client_port);
             $time = time();
             if (!($status === false)) {
                 if ((time() - (int) $time) > 1) {
@@ -52,11 +54,13 @@ class UDPThread extends \Thread
                     $count ++;
                 }
                 if (!isset($this->session["$client_ip:$client_port"])) {
-                    $this->session["$client_ip:$client_port"] = [socket_create(AF_INET, SOCK_DGRAM, SOL_UDP), 0];
+                    $cs = socket_create(AF_INET, SOCK_DGRAM, SOL_UDP);
+                    socket_set_nonblock($cs);
+                    $this->session["$client_ip:$client_port"] = [$cs, 0];
                 }
                 $this->session["$client_ip:$client_port"][1] = $time;
                 $session = $this->session["$client_ip:$client_port"];
-                socket_sendto($session[0], $buffer, strlen($buffer), 64, $this->dest_addr, $this->dest_port);
+                socket_sendto($session[0], $buffer, strlen($buffer), 0, $this->dest_addr, $this->dest_port);
             } else {
                 if ($count <= self::DYNAMIC_SPEED) {
                     $count = 0;
